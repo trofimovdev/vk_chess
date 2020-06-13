@@ -22,4 +22,11 @@ class Database
     {
         $this->con = new PDO('pgsql:host=' . $host . ' dbname=' . $dbname, $user, $password);
     }
+
+    public function query(string $sql, array $params = [])
+    {
+        $query = $this->con->prepare($sql);
+        $query->execute($params);
+        return $query->fetchAll(PDO::FETCH_CLASS);
+    }
 }

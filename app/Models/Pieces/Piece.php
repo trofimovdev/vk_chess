@@ -5,9 +5,9 @@ namespace App\Models\Pieces;
 
 abstract class Piece
 {
-    protected bool $color;
-    protected int $x;
-    protected int $y;
+    private bool $color;
+    private int $x;
+    private int $y;
 
 
     /**
@@ -30,7 +30,7 @@ abstract class Piece
      *
      * @return bool
      */
-    public function getColor()
+    public function getColor(): bool
     {
         return $this->color;
     }
@@ -41,7 +41,7 @@ abstract class Piece
      *
      * @return array
      */
-    public function getCoords()
+    public function getCoords(): array
     {
         return [$this->x, $this->y];
     }
@@ -55,5 +55,5 @@ abstract class Piece
      *
      * @return bool
      */
-    public abstract function checkMove(int $x, int $y);
+    public abstract function checkMove(int $x, int $y): bool;
 }

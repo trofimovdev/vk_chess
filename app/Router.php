@@ -4,7 +4,7 @@ namespace App;
 
 use App\Exceptions\Http\HttpNotFoundException;
 use App\Models\Game;
-use App\Http\Responses\BaseResponse;
+use App\Http\Responses\OkResponse;
 
 
 class Router
@@ -15,10 +15,10 @@ class Router
     /**
      * Routes to specified method.
      *
-     * @return BaseResponse
+     * @return OkResponse
      * @throws HttpNotFoundException
      */
-    public static function init(): BaseResponse
+    public static function init(): OkResponse
     {
         $uri = $_SERVER['REQUEST_URI'];
         $action = self::getMethod($uri);
@@ -28,12 +28,12 @@ class Router
             throw new HttpNotFoundException('Method not found', 404);
         }
 
-        return $game->$action();
+        return new OkResponse($game->$action());
     }
 
 
     /**
-     * Gets method name from the given URI
+     * Gets method name from the given URI.
      *
      * @param string $uri
      * @return string
