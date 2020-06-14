@@ -7,11 +7,11 @@ use PDO;
 
 class Database
 {
-    protected PDO $con;
+    private PDO $con;
 
 
     /**
-     * Creates a new schema of database.
+     * Database constructor.
      *
      * @param string $host
      * @param string $dbname
@@ -23,10 +23,30 @@ class Database
         $this->con = new PDO('pgsql:host=' . $host . ' dbname=' . $dbname, $user, $password);
     }
 
-    public function query(string $sql, array $params = [])
+
+    /**
+     * Prepares and executes an SQL statement.
+     *
+     * @param string $sql
+     * @param array $params
+     *
+     * @return array
+     */
+    public function query(string $sql, array $params = []): array
     {
         $query = $this->con->prepare($sql);
         $query->execute($params);
         return $query->fetchAll(PDO::FETCH_CLASS);
+    }
+
+
+    /**
+     * Returns connection.
+     *
+     * @return PDO
+     */
+    public function getCon(): PDO
+    {
+        return $this->con;
     }
 }
