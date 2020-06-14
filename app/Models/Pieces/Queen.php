@@ -17,10 +17,10 @@ class Queen extends Piece
     /**
      * {@inheritDoc}
      */
-    public function checkMove($x, $y)
+    public function checkMove($x, $y): bool
     {
         // if color is black
-        if ($this->color === 0) {
+        if ($this->getColor() === 0) {
 
         } else {
 

@@ -17,10 +17,10 @@ class Knight extends Piece
     /**
      * {@inheritDoc}
      */
-    public function checkMove(int $x, int $y)
+    public function checkMove(int $x, int $y): bool
     {
         // if color is black
-        if ($this->color === 0) {
+        if ($this->getColor() === 0) {
 
         } else {
 
