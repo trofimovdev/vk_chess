@@ -8,9 +8,9 @@ class Knight extends Piece
     /**
      * {@inheritDoc}
      */
-    public function __construct(bool $color, int $x, int $y)
+    public function __construct(bool $color, int $x, int $y, int $movesCounter)
     {
-        parent::__construct($color, $x, $y);
+        parent::__construct($color, $x, $y, $movesCounter);
     }
 
 

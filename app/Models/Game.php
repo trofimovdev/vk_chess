@@ -70,20 +70,20 @@ class Game
         $blackPawns = [];
         $emptyCells = [];
         for ($i = 0; $i < 8; ++$i) {
-            $whitePawns[] = new Pawn(1, $i, 6);
-            $blackPawns[] = new Pawn(0, $i, 1);
+            $whitePawns[] = new Pawn(1, $i, 6, 0, 0);
+            $blackPawns[] = new Pawn(0, $i, 1, 0, 0);
             $emptyCells[] = null;
         }
         $initBoard = [
             [
-                new Rook(0, 0, 0),
-                new Knight(0, 1, 0),
-                new Bishop(0, 2, 0),
-                new Queen(0, 3, 0),
-                new King(0, 4, 0),
-                new Bishop(0, 5, 0),
-                new Knight(0, 6, 0),
-                new Rook(0, 7, 0)
+                new Rook(0, 0, 0, 0),
+                new Knight(0, 1, 0, 0),
+                new Bishop(0, 2, 0, 0),
+                new Queen(0, 3, 0, 0),
+                new King(0, 4, 0, 0),
+                new Bishop(0, 5, 0, 0),
+                new Knight(0, 6, 0, 0),
+                new Rook(0, 7, 0, 0)
             ],
             $blackPawns,
             $emptyCells,
@@ -92,14 +92,14 @@ class Game
             $emptyCells,
             $whitePawns,
             [
-                new Rook(1, 0, 7),
-                new Knight(1, 1, 7),
-                new Bishop(1, 2, 7),
-                new Queen(1, 3, 7),
-                new King(1, 4, 7),
-                new Bishop(1, 5, 7),
-                new Knight(1, 6, 7),
-                new Rook(1, 7, 7)
+                new Rook(1, 0, 7, 0),
+                new Knight(1, 1, 7, 0),
+                new Bishop(1, 2, 7, 0),
+                new Queen(1, 3, 7, 0),
+                new King(1, 4, 7, 0),
+                new Bishop(1, 5, 7, 0),
+                new Knight(1, 6, 7, 0),
+                new Rook(1, 7, 7, 0)
             ]
         ];
 
@@ -174,7 +174,15 @@ class Game
                     $response[count($response) - 1][] = null;
                     continue;
                 }
-                $response[count($response) - 1][] = $factory->getPiece($board[$row][$col]->type, $col, $row);
+
+                $response[count($response) - 1][] =
+                    $factory->getPiece(
+                        $board[$row][$col]->type,
+                        $col,
+                        $row,
+                        $board[$row][$col]->movesCounter,
+                        isset($board[$row][$col]->enPassant) ? $board[$row][$col]->enPassant : null
+                    );
             }
         }
         return $response;

@@ -13,37 +13,39 @@ class Factory
      * @param string $letter
      * @param int $x
      * @param int $y
+     * @param int $movesCounter
+     * @param int|null $enPassant
      *
      * @return Piece
      * @throws DatabaseInvalidPieceException
      */
-    public function getPiece(string $letter, int $x, int $y): Piece
+    public function getPiece(string $letter, int $x, int $y, int $movesCounter, int $enPassant = null): Piece
     {
         $color = strtoupper($letter) === $letter;
 
         switch (strtoupper($letter)) {
             case 'K':
-                return new King($color, $x, $y);
+                return new King($color, $x, $y, $movesCounter);
                 break;
 
             case 'B':
-                return new Bishop($color, $x, $y);
+                return new Bishop($color, $x, $y, $movesCounter);
                 break;
 
             case 'H':
-                return new Knight($color, $x, $y);
+                return new Knight($color, $x, $y, $movesCounter);
                 break;
 
             case 'P':
-                return new Pawn($color, $x, $y);
+                return new Pawn($color, $x, $y, $movesCounter, $enPassant);
                 break;
 
             case 'Q':
-                return new Queen($color, $x, $y);
+                return new Queen($color, $x, $y, $movesCounter);
                 break;
 
             case 'R':
-                return new Rook($color, $x, $y);
+                return new Rook($color, $x, $y, $movesCounter);
                 break;
 
             default:

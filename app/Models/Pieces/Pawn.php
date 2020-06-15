@@ -13,11 +13,12 @@ class Pawn extends Piece
 
     /**
      * {@inheritDoc}
+     * @param int $enPassant
      */
-    public function __construct(int $color, int $x, int $y)
+    public function __construct(int $color, int $x, int $y, int $movesCounter, int $enPassant)
     {
-        parent::__construct($color, $x, $y);
-        $this->enPassant = 0;
+        parent::__construct($color, $x, $y, $movesCounter);
+        $this->enPassant = $enPassant;
     }
 
 

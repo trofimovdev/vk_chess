@@ -21,13 +21,14 @@ abstract class Piece implements JsonSerializable
      * @param int $color 0 - black; 1 - white
      * @param int $x
      * @param int $y
+     * @param int $movesCounter
      */
-    public function __construct(int $color, int $x, int $y)
+    public function __construct(int $color, int $x, int $y, int $movesCounter)
     {
         $this->color = $color;
         $this->x = $x;
         $this->y = $y;
-        $this->movesCounter = 0;
+        $this->movesCounter = $movesCounter;
     }
 
 
