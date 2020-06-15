@@ -123,7 +123,7 @@ class Game
      *
      * @return array
      */
-    public function getStatus(): array
+    public function status(): array
     {
         print_r($this->getBoard());
         return [
@@ -188,7 +188,6 @@ class Game
      * @throws GameInvalidCoords
      * @throws HttpRequestException
      * @throws GameRulesException
-     * @throws DatabaseInvalidPieceException
      */
     public function move()
     {
@@ -231,7 +230,7 @@ class Game
         $this->board[$from[1]][$from[0]] = null;
 
         $this->db->query('UPDATE games SET board = ?, move_number = ?, status = ? WHERE id = ?;',
-            [$this->jsonEncode($this->getBoard()), 0, 0, $this->id]);
+            [$this->jsonEncode($this->getBoard()), $this->getMoveNumber(), $this->getStatus(), $this->id]);
 
     }
 
@@ -291,7 +290,6 @@ class Game
      * @param array $board
      *
      * @return string
-     * @throws DatabaseInvalidPieceException
      */
     private function jsonEncode(array $board): string
     {
@@ -353,5 +351,15 @@ class Game
     private function incrementMoveNumber(): void
     {
         ++$this->moveNumber;
+    }
+
+    /**
+     * Returns game status.
+     *
+     * @return int
+     */
+    private function getStatus(): int
+    {
+        return $this->status;
     }
 }

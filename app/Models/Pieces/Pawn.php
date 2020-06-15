@@ -3,6 +3,8 @@
 namespace App\Models\Pieces;
 
 
+use App\Exceptions\Database\DatabaseInvalidPieceException;
+
 class Pawn extends Piece
 {
     private int $enPassant;
@@ -66,5 +68,20 @@ class Pawn extends Piece
     public function getEnPassant(): int
     {
         return $this->enPassant;
+    }
+
+
+    /**
+     * Increments the piece moves counter.
+     *
+     * @throws DatabaseInvalidPieceException
+     */
+    public function jsonSerialize() {
+        $factory = new Factory();
+        return [
+            'type' => $factory->getLetter($this),
+            'movesCounter' => $this->getMovesCounter(),
+            'enPassant' => $this->getEnPassant()
+        ];
     }
 }

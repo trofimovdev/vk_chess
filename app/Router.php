@@ -32,7 +32,7 @@ class Router
         $gameId = (int)$_REQUEST['id'];
 
         $game = new Game($gameId);
-        if (!method_exists($game, $method)) {
+        if (!in_array($method, get_class_methods(Game::class))) {
             throw new HttpNotFoundException('Method not found', 404);
         }
 
