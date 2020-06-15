@@ -17,7 +17,7 @@ class Bishop extends Piece
     /**
      * {@inheritDoc}
      */
-    public function checkMove(int $x, int $y): bool
+    public function checkMove(int $x, int $y, array $board, int $moveNumber): int
     {
         // if color is black
         if ($this->getColor() === 0) {

@@ -2,19 +2,19 @@
 
 namespace App\Models\Pieces;
 
-use App\Models\Game;
-
 
 class Pawn extends Piece
 {
     private int $enPassant;
+    public const EN_PASSANT = 3;
+
 
     /**
      * {@inheritDoc}
      */
-    public function __construct(bool $color, int $x, int $y, Game $game)
+    public function __construct(int $color, int $x, int $y)
     {
-        parent::__construct($color, $x, $y, $game);
+        parent::__construct($color, $x, $y);
         $this->enPassant = 0;
     }
 
@@ -22,18 +22,16 @@ class Pawn extends Piece
     /**
      * {@inheritDoc}
      */
-    public function checkMove(int $x, int $y): bool
+    public function checkMove(int $x, int $y, array $board, int $moveNumber): int
     {
         $coords = $this->getCoords();
-        $game = $this->getGame();
-        $cell = $game->getCell($x, $y);
+        print_r($coords);
+        print_r([$x, $y]);
 
-        // en passant
+        // en passant move
         if (
             $this->getMovesCounter() === 0 &&
-            $coords[0] === $x && $coords[1] + $this->forward(2) == $y &&
-            is_null($game->getCell($coords[0], $coords[1] + $this->forward(1))) &&
-            is_null($cell)
+            $coords[0] === $x && $coords[1] + $this->forward(2) === $y
         ) {
             $this->enPassant = $moveNumber;
             return true;
@@ -41,8 +39,7 @@ class Pawn extends Piece
 
         // basic move
         if (
-            $coords[0] === $x && $coords[1] + $this->forward(1) == $y &&
-            is_null($cell)
+            $coords[0] === $x && $coords[1] + $this->forward(1) === $y
         ) {
             return true;
         }
@@ -50,12 +47,15 @@ class Pawn extends Piece
         // capturing
         if (
             ($coords[0] + 1 === $x || $coords[0] - 1 === $x) &&
-            $coords[1] + $this->forward(1) == $y &&
-            (!is_null($cell) ||
+            $coords[1] + $this->forward(1) === $y
         ) {
-            // capturing
-            if ($cell instanceof Piece) {
-                $cell->getEnPassant();
+            // en passant
+            $enPassantCell = $board[$y - $this->forward(1)][$x];
+            if (
+                $enPassantCell instanceof Pawn &&
+                $enPassantCell->getEnPassant() === $moveNumber - 1
+            ) {
+                return self::EN_PASSANT;
             }
             return true;
         }

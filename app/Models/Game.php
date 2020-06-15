@@ -8,24 +8,23 @@ use App\Exceptions\Game\GameInvalidCoords;
 use App\Exceptions\Game\GameRulesException;
 use App\Exceptions\Http\HttpNotFoundException;
 use App\Exceptions\Http\HttpRequestException;
+use App\Models\Pieces\Bishop;
 use App\Models\Pieces\Factory;
+use App\Models\Pieces\King;
+use App\Models\Pieces\Knight;
+use App\Models\Pieces\Pawn;
 use App\Models\Pieces\Piece;
+use App\Models\Pieces\Queen;
+use App\Models\Pieces\Rook;
 
 
 class Game
 {
+    private int $id;
     private array $board;
     private int $moveNumber;
     private int $status;
     private Database $db;
-    public const INIT_BOARD = 'rhbqkbhr' .
-                              'pppppppp' .
-                              '........' .
-                              '........' .
-                              '........' .
-                              '........' .
-                              'PPPPPPPP' .
-                              'RHBQKBHR';
 
     private const FIELD_ID          = 'id';
     private const FIELD_MOVE_NUMBER = 'moveNumber';
@@ -52,7 +51,8 @@ class Game
         }
         $game = $game[0];
 
-        $this->board = $this->parseBoard($game->board);
+        $this->id = $game->id;
+        $this->board = $this->jsonDecode($game->board);
         $this->moveNumber = $game->move_number;
         $this->status = $game->status;
     }
@@ -63,17 +63,55 @@ class Game
      *
      * @return array
      * @throws DatabaseGameNotCreatedException
+     * @throws DatabaseInvalidPieceException
      */
     public function create(): array
     {
+        $whitePawns = [];
+        $blackPawns = [];
+        $emptyCells = [];
+        for ($i = 0; $i < 8; ++$i) {
+            $whitePawns[] = new Pawn(1, $i, 6);
+            $blackPawns[] = new Pawn(0, $i, 1);
+            $emptyCells[] = null;
+        }
+        $initBoard = [
+            [
+                new Rook(0, 0, 0),
+                new Knight(0, 1, 0),
+                new Bishop(0, 2, 0),
+                new Queen(0, 3, 0),
+                new King(0, 4, 0),
+                new Bishop(0, 5, 0),
+                new Knight(0, 6, 0),
+                new Rook(0, 7, 0)
+            ],
+            $blackPawns,
+            $emptyCells,
+            $emptyCells,
+            $emptyCells,
+            $emptyCells,
+            $whitePawns,
+            [
+                new Rook(1, 0, 7),
+                new Knight(1, 1, 7),
+                new Bishop(1, 2, 7),
+                new Queen(1, 3, 7),
+                new King(1, 4, 7),
+                new Bishop(1, 5, 7),
+                new Knight(1, 6, 7),
+                new Rook(1, 7, 7)
+            ]
+        ];
+
         $game = $this->db->query('INSERT INTO games (board, move_number, status) VALUES (?, ?, ?);',
-                                 [self::INIT_BOARD, 0, 0]);
+                                 [$this->jsonEncode($initBoard), 0, 0]);
         if (!$game) {
             throw new DatabaseGameNotCreatedException('Game not created', 500);
         }
 
         return [
-            self::FIELD_ID => $this->db->getCon()->lastInsertId(),
+            self::FIELD_ID => (int)$this->db->getCon()->lastInsertId(),
             self::FIELD_MOVE_NUMBER => 0,
             self::FIELD_TURN => 1
         ];
@@ -87,6 +125,7 @@ class Game
      */
     public function getStatus(): array
     {
+        print_r($this->getBoard());
         return [
             self::FIELD_MOVE_NUMBER => $this->getMoveNumber(),
             self::FIELD_TURN => $this->getTurn(),
@@ -117,29 +156,27 @@ class Game
 
 
     /**
-     * Parses string board to array.
+     * Parses JSON board to array.
      *
      * @param string $board
      *
      * @return array
      * @throws DatabaseInvalidPieceException
      */
-    private function parseBoard(string $board): array
+    private function jsonDecode(string $board): array
     {
-        $response = [];
+        $board = json_decode($board);
         $factory = new Factory();
-        $length = strlen($board);
-        for ($i = 0; $i < $length; ++$i) {
-            $letter = $board[$i];
-            if (count($response) <= intdiv($i, 8)) {
-                $response[] = [];
+        $response = [];
+        for ($row = 0; $row < count($board); ++$row) {
+            $response[] = [];
+            for ($col = 0; $col < count($board[$col]); ++$col) {
+                if ($board[$row][$col]->type === '.') {
+                    $response[count($response) - 1][] = null;
+                    continue;
+                }
+                $response[count($response) - 1][] = $factory->getPiece($board[$row][$col]->type, $col, $row);
             }
-
-            if ($letter === '.') {
-                $response[count($response) - 1][] = null;
-                continue;
-            }
-            $response[count($response) - 1][] = $factory->getPiece($letter, $i % 8, intdiv($i, 8), $this);
         }
         return $response;
     }
@@ -151,6 +188,7 @@ class Game
      * @throws GameInvalidCoords
      * @throws HttpRequestException
      * @throws GameRulesException
+     * @throws DatabaseInvalidPieceException
      */
     public function move()
     {
@@ -174,12 +212,27 @@ class Game
         if ($fromCell->getColor() !== $this->getTurn()) {
             throw new GameRulesException('Not your turn.', 403);
         }
-        if (!$fromCell->checkMove($to[0], $to[1], $this->getMoveNumber())) {
+
+        $move = $fromCell->checkMove($to[0], $to[1], $this->getBoard(), $this->getMoveNumber());
+        if (!$move) {
             throw new GameRulesException('Bad move.', 400);
         }
+        if (!($fromCell instanceof Knight) && !$this->isReachable($from, $to)) {
+            throw new GameRulesException('Cell is not reachable.', 400);
+        }
 
-        print_r([$from, $this->getCell($from[0], $from[1]), $to, $this->getCell($to[0], $to[1])]);
-//        print_r($this->getCell(2, 2));
+        if ($move === Pawn::EN_PASSANT) {
+            $this->board[$to[1] - $fromCell->forward(1)][$to[0]] = null;
+        }
+        $this->incrementMoveNumber();
+        $fromCell->incrementMovesCounter();
+
+        $this->board[$to[1]][$to[0]] = $this->board[$from[1]][$from[0]];
+        $this->board[$from[1]][$from[0]] = null;
+
+        $this->db->query('UPDATE games SET board = ?, move_number = ?, status = ? WHERE id = ?;',
+            [$this->jsonEncode($this->getBoard()), 0, 0, $this->id]);
+
     }
 
 
@@ -203,7 +256,7 @@ class Game
             throw new GameInvalidCoords('Invalid coords', 500);
         }
 
-        return [ord($letter) - 65, $num];
+        return [ord($letter) - 65, 7 - $num];
     }
 
 
@@ -215,25 +268,90 @@ class Game
      *
      * @return Piece|null
      */
-    public function getCell(int $x, int $y)
+    private function getCell(int $x, int $y)
     {
-        return $this->board[$x][$y];
+        return $this->board[$y][$x];
     }
 
 
     /**
-     * Gets cell by coords.
+     * Returns board.
      *
-     * @param int $x1
-     * @param int $y1
-     * @param int $x2
-     * @param int $y2
+     * @return array
+     */
+    private function getBoard()
+    {
+        return $this->board;
+    }
+
+
+    /**
+     * Returns JSON string of board.
+     *
+     * @param array $board
+     *
+     * @return string
+     * @throws DatabaseInvalidPieceException
+     */
+    private function jsonEncode(array $board): string
+    {
+        $response = [];
+        $factory = new Factory();
+        for ($row = 0; $row < count($board); ++$row) {
+            $response[] = [];
+            for ($col = 0; $col < count($board[$col]); ++$col) {
+                if (is_null($board[$row][$col])) {
+                    $response[count($response) - 1][] = [
+                        'type' => '.'
+                    ];
+                    continue;
+                }
+                $response[count($response) - 1][] = $board[$row][$col];
+            }
+        }
+        return json_encode($response);
+    }
+
+
+    /**
+     * Checks that cell is reachable.
+     *
+     * @param array $from
+     * @param array $to
      *
      * @return bool
      */
-    public function areEmptyCells(int $x1, int $y1, int $x2, int $y2): bool
+    private function isReachable(array $from, array $to): bool
     {
+        $cells = [];
+        if ($from[0] === $to[0]) {
+            for ($i = min($from[1], $to[1]); $i <= max($from[1], $to[1]); ++$i) {
+                $cells[] = $this->getCell($from[0], $i);
+            }
+        } else if ($from[1] === $to[1]) {
+            for ($i = min($from[0], $to[0]); $i <= max($from[0], $to[0]); ++$i) {
+                $cells[] = $this->getCell($i, $from[1]);
+            }
+        } else {
+            $x1 = min($from[0], $to[0]);
+            $y1 = $x1 === $from[0] ? $from[1] : $to[1];
+            $x2 = max($from[0], $to[0]);
+            $y2 = $x2 === $from[0] ? $from[1] : $to[1];
+            while ($x1 <= $x2 && $y1 <= $y2) {
+                $cells[] = $this->getCell($x1, $y1);
+                ++$x1;
+                ++$y1;
+            }
+        }
+        print_r($cells);
+        return count(array_filter($cells, function ($i) {
+            return $i !== null;
+        })) === 1;
+    }
 
-        return $this->board[$x][$y];
+
+    private function incrementMoveNumber(): void
+    {
+        ++$this->moveNumber;
     }
 }

@@ -2,7 +2,8 @@
     "name": "trofimovdev/vk_chess",
     "require": {
         "vlucas/phpdotenv": "^5.0",
-        "ext-pdo": "*"
+        "ext-pdo": "*",
+        "ext-json": "*"
     },
     "autoload": {
         "psr-4": {

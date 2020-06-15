@@ -19,6 +19,7 @@ class Router
      * @return OkResponse
      * @throws HttpRequestException
      * @throws HttpNotFoundException
+     * @throws Exceptions\Database\DatabaseInvalidPieceException
      */
     public static function init(): OkResponse
     {
@@ -28,7 +29,7 @@ class Router
         if (!isset($_REQUEST['id']) && $method !== 'create') {
             throw new HttpRequestException('No id passed', 400);
         }
-        $gameId = $_REQUEST['id'] || 0;
+        $gameId = (int)$_REQUEST['id'];
 
         $game = new Game($gameId);
         if (!method_exists($game, $method)) {

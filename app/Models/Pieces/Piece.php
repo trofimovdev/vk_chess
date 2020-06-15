@@ -3,41 +3,40 @@
 namespace App\Models\Pieces;
 
 
+use App\Exceptions\Database\DatabaseInvalidPieceException;
 use App\Models\Game;
+use JsonSerializable;
 
-abstract class Piece
+abstract class Piece implements JsonSerializable
 {
-    private bool $color;
+    private int $color;
     private int $x;
     private int $y;
     private int $movesCounter;
-    private Game $game;
 
 
     /**
      * Creates a new schema of piece.
      *
-     * @param bool $color 0 - black; 1 - white
+     * @param int $color 0 - black; 1 - white
      * @param int $x
      * @param int $y
-     * @param Game $game
      */
-    public function __construct(bool $color, int $x, int $y, Game $game)
+    public function __construct(int $color, int $x, int $y)
     {
         $this->color = $color;
         $this->x = $x;
         $this->y = $y;
         $this->movesCounter = 0;
-        $this->game = $game;
     }
 
 
     /**
      * Returns the piece color.
      *
-     * @return bool
+     * @return int
      */
-    public function getColor(): bool
+    public function getColor(): int
     {
         return $this->color;
     }
@@ -59,10 +58,12 @@ abstract class Piece
      *
      * @param int $x
      * @param int $y
+     * @param array $board
+     * @param int $moveNumber
      *
-     * @return bool
+     * @return int
      */
-    public abstract function checkMove(int $x, int $y): bool;
+    public abstract function checkMove(int $x, int $y, array $board, int $moveNumber): int;
 
 
     /**
@@ -93,12 +94,23 @@ abstract class Piece
 
 
     /**
-     * Returns the game.
-     *
-     * @return Game
+     * Increments the piece moves counter.
      */
-    public function getGame(): Game
+    public function incrementMovesCounter(): void
     {
-        return $this->game;
+        ++$this->movesCounter;
+    }
+
+    /**
+     * Increments the piece moves counter.
+     *
+     * @throws DatabaseInvalidPieceException
+     */
+    public function jsonSerialize() {
+        $factory = new Factory();
+        return [
+            'type' => $factory->getLetter($this),
+            'movesCounter' => $this->getMovesCounter()
+        ];
     }
 }
