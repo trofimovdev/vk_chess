@@ -321,6 +321,8 @@ class Game
      */
     private function isReachable(array $from, array $to): bool
     {
+        print_r($from);
+        print_r($to);
         $cells = [];
         if ($from[0] === $to[0]) {
             for ($i = min($from[1], $to[1]); $i <= max($from[1], $to[1]); ++$i) {
@@ -335,26 +337,46 @@ class Game
             $y1 = $x1 === $from[0] ? $from[1] : $to[1];
             $x2 = max($from[0], $to[0]);
             $y2 = $x2 === $from[0] ? $from[1] : $to[1];
-            while ($x1 <= $x2 && $y1 <= $y2) {
+            while (abs($x1 - $x2) >= 0 && abs($y1 - $y2) >= 0) {
                 $cells[] = $this->getCell($x1, $y1);
-                ++$x1;
-                ++$y1;
+                if ($x1 > $x2) {
+                    --$x1;
+                } else if ($x1 < $x2) {
+                    ++$x1;
+                } else if ($x1 === $x2) {
+                    break;
+                }
+                if ($y1 > $y2) {
+                    --$y1;
+                } else if ($y1 < $y2) {
+                    ++$y1;
+                } else if ($y1 === $y2) {
+                    break;
+                }
             }
         }
+
+        print_r($cells);
+        print_r(count($cells));
 
         $pieces = count(array_filter($cells, function ($i) {
             return !is_null($i);
         }));
+
+
         if ($pieces === 1) {
             return true;
         }
         if ($pieces === 2) {
+            $result = 0;
             if ($cells[0] instanceof Piece) {
-                return $cells[0]->getColor() !== $this->getCell($from[0], $from[1])->getColor();
+                $result += $cells[0]->getColor() !== $this->getCell($from[0], $from[1])->getColor() ? 1 : 0;
             }
             if ($cells[count($cells) - 1] instanceof Piece) {
-                return $cells[count($cells) - 1]->getColor() !== $this->getCell($from[0], $from[1])->getColor();
+                $result +=
+                    $cells[count($cells) - 1]->getColor() !== $this->getCell($from[0], $from[1])->getColor() ? 1 : 0;
             }
+            return $result === 1;
         }
         return false;
     }
