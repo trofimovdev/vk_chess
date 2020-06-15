@@ -19,11 +19,12 @@ class Rook extends Piece
      */
     public function checkMove(int $x, int $y, array $board, int $moveNumber): int
     {
-        // if color is black
-        if ($this->getColor() === 0) {
+        $coords = $this->getCoords();
 
-        } else {
-
+        if ($coords[0] === $x || $coords[1] === $y) {
+            return true;
         }
+
+        return false;
     }
 }

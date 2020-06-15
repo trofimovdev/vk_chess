@@ -341,12 +341,22 @@ class Game
                 ++$y1;
             }
         }
-        print_r($cells);
-        return
-            count(array_filter($cells, function ($i) {
-                return $i !== null;
-            })) === 1 ||
-            $cells[count($cells) - 1]->getColor() !== $cells[0]->getColor();
+
+        $pieces = count(array_filter($cells, function ($i) {
+            return !is_null($i);
+        }));
+        if ($pieces === 1) {
+            return true;
+        }
+        if ($pieces === 2) {
+            if ($cells[0] instanceof Piece) {
+                return $cells[0]->getColor() !== $this->getCell($from[0], $from[1])->getColor();
+            }
+            if ($cells[count($cells) - 1] instanceof Piece) {
+                return $cells[count($cells) - 1]->getColor() !== $this->getCell($from[0], $from[1])->getColor();
+            }
+        }
+        return false;
     }
 
 
