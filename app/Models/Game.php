@@ -63,7 +63,6 @@ class Game
      *
      * @return array
      * @throws DatabaseGameNotCreatedException
-     * @throws DatabaseInvalidPieceException
      */
     public function create(): array
     {
@@ -105,14 +104,14 @@ class Game
         ];
 
         $game = $this->db->query('INSERT INTO games (board, move_number, status) VALUES (?, ?, ?);',
-                                 [$this->jsonEncode($initBoard), 0, 0]);
+                                 [$this->jsonEncode($initBoard), 1, 0]);
         if (!$game) {
             throw new DatabaseGameNotCreatedException('Game not created', 500);
         }
 
         return [
             self::FIELD_ID => (int)$this->db->getCon()->lastInsertId(),
-            self::FIELD_MOVE_NUMBER => 0,
+            self::FIELD_MOVE_NUMBER => 1,
             self::FIELD_TURN => 1
         ];
     }
@@ -151,7 +150,7 @@ class Game
      */
     private function getTurn(): int
     {
-        return $this->getMoveNumber() % 2 === 0;
+        return $this->getMoveNumber() % 2 !== 0;
     }
 
 
@@ -223,6 +222,7 @@ class Game
         if ($move === Pawn::EN_PASSANT) {
             $this->board[$to[1] - $fromCell->forward(1)][$to[0]] = null;
         }
+
         $this->incrementMoveNumber();
         $fromCell->incrementMovesCounter();
 
@@ -342,9 +342,11 @@ class Game
             }
         }
         print_r($cells);
-        return count(array_filter($cells, function ($i) {
-            return $i !== null;
-        })) === 1;
+        return
+            count(array_filter($cells, function ($i) {
+                return $i !== null;
+            })) === 1 ||
+            $cells[count($cells) - 1]->getColor() !== $cells[0]->getColor();
     }
 
 

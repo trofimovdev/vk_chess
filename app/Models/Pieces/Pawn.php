@@ -27,8 +27,6 @@ class Pawn extends Piece
     public function checkMove(int $x, int $y, array $board, int $moveNumber): int
     {
         $coords = $this->getCoords();
-        print_r($coords);
-        print_r([$x, $y]);
 
         // en passant move
         if (
@@ -48,7 +46,7 @@ class Pawn extends Piece
 
         // capturing
         if (
-            ($coords[0] + 1 === $x || $coords[0] - 1 === $x) &&
+            abs($coords[0] - $x) === 1 &&
             $coords[1] + $this->forward(1) === $y
         ) {
             // en passant
@@ -58,8 +56,11 @@ class Pawn extends Piece
                 $enPassantCell->getEnPassant() === $moveNumber - 1
             ) {
                 return self::EN_PASSANT;
+            } else if (
+                !is_null($board[$y][$x]) && $board[$y][$x]->getColor() !== $this->getColor()
+            ) {
+                return true;
             }
-            return true;
         }
         return false;
     }
