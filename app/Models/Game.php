@@ -29,6 +29,10 @@ class Game
     private const FIELD_ID          = 'id';
     private const FIELD_MOVE_NUMBER = 'moveNumber';
     private const FIELD_TURN        = 'turn';
+    private const FIELD_STATUS      = 'status';
+    private const STATUS_RUNNING    = 0;
+    private const STATUS_CHECK      = 1;
+    private const STATUS_MATE       = 2;
 
 
     /**
@@ -104,7 +108,7 @@ class Game
         ];
 
         $game = $this->db->query('INSERT INTO games (board, move_number, status) VALUES (?, ?, ?);',
-                                 [$this->jsonEncode($initBoard), 1, 0]);
+                                 [$this->jsonEncode($initBoard), 1, self::STATUS_RUNNING]);
         if (!$game) {
             throw new DatabaseGameNotCreatedException('Game not created', 500);
         }
@@ -124,10 +128,14 @@ class Game
      */
     public function status(): array
     {
+        print_r('check');
+        print_r($this->isKingInCheck($this->getTurn()));
+        print_r('check end');
         print_r($this->getBoard());
         return [
             self::FIELD_MOVE_NUMBER => $this->getMoveNumber(),
             self::FIELD_TURN => $this->getTurn(),
+            self::FIELD_STATUS => $this->getStatus(),
         ];
     }
 
@@ -224,22 +232,32 @@ class Game
             throw new GameRulesException('Bad move.', 400);
         }
         if (!($fromCell instanceof Knight) && !$this->isReachable($from, $to)) {
-            throw new GameRulesException('Cell is not reachable.', 400);
+            throw new GameRulesException('Cell is not reachable.', 500);
         }
 
         if ($move === Pawn::EN_PASSANT) {
             $this->board[$to[1] - $fromCell->forward(1)][$to[0]] = null;
         }
 
+        $this->board[$to[1]][$to[0]] = $this->board[$from[1]][$from[0]];
+        $this->board[$from[1]][$from[0]] = null;
+
+        if ($this->isKingInCheck($this->getTurn())) {
+            throw new GameRulesException('Bad move: the King will be in check.', 400);
+        }
+
         $this->incrementMoveNumber();
         $fromCell->incrementMovesCounter();
 
-        $this->board[$to[1]][$to[0]] = $this->board[$from[1]][$from[0]];
-        $this->board[$from[1]][$from[0]] = null;
+        print_r('check');
+        print_r($this->isKingInCheck($this->getTurn()));
+        print_r('check end');
+
 
         $this->db->query('UPDATE games SET board = ?, move_number = ?, status = ? WHERE id = ?;',
             [$this->jsonEncode($this->getBoard()), $this->getMoveNumber(), $this->getStatus(), $this->id]);
 
+        return null;
     }
 
 
@@ -329,8 +347,6 @@ class Game
      */
     private function isReachable(array $from, array $to): bool
     {
-        print_r($from);
-        print_r($to);
         $cells = [];
         if ($from[0] === $to[0]) {
             for ($i = min($from[1], $to[1]); $i <= max($from[1], $to[1]); ++$i) {
@@ -363,9 +379,6 @@ class Game
                 }
             }
         }
-
-        print_r($cells);
-        print_r(count($cells));
 
         $pieces = count(array_filter($cells, function ($i) {
             return !is_null($i);
@@ -403,5 +416,55 @@ class Game
     private function getStatus(): int
     {
         return $this->status;
+    }
+
+    /**
+     * Returns king coords.
+     *
+     * @param int $color
+     *
+     * @return array|null
+     */
+    private function getKingCoords(int $color): ?array
+    {
+        $board = $this->getBoard();
+        for ($row = 0; $row < count($board); ++$row) {
+            for ($col = 0; $col < count($board[$col]); ++$col) {
+                if (
+                    $board[$row][$col] instanceof King &&
+                    $board[$row][$col]->getColor() === $color
+                ) {
+                    return [$col, $row];
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns king coords.
+     *
+     * @param int $color
+     *
+     * @return bool
+     */
+    private function isKingInCheck(int $color): bool
+    {
+        $board = array_merge(...$this->getBoard());
+        $coords = $this->getKingCoords($color);
+        foreach ($board as $piece) {
+            if (!($piece instanceof Piece)) {
+                continue;
+            }
+            if ($piece->getColor() === $color) {
+                continue;
+            }
+            $move = $piece->checkMove($coords[0], $coords[1], $this->getBoard(), $this->getMoveNumber());
+            $pieceCoords = $piece->getCoords();
+            if ($move && ($piece instanceof Knight || $this->isReachable($pieceCoords, $coords))) {
+                return true;
+            };
+        }
+        return false;
     }
 }

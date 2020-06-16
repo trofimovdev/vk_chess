@@ -57,7 +57,9 @@ class Pawn extends Piece
                 $enPassantCell->getEnPassant() === $moveNumber - 1
             ) {
                 return self::EN_PASSANT;
-            } else if (
+            }
+
+            if (
                 !is_null($board[$y][$x]) && $board[$y][$x]->getColor() !== $this->getColor()
             ) {
                 return true;
