@@ -34,7 +34,6 @@ class Pawn extends Piece
             $this->getMovesCounter() === 0 &&
             $coords[0] === $x && $coords[1] + $this->forward(2) === $y
         ) {
-            $this->enPassant = $moveNumber;
             return true;
         }
 
