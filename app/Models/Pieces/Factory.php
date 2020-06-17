@@ -95,6 +95,4 @@ class Factory
         }
         return $piece->getColor() ? strtoupper($letter) : strtolower($letter);
     }
-
-
 }

@@ -116,6 +116,7 @@ abstract class Piece implements JsonSerializable
         $this->incrementMovesCounter();
     }
 
+
     /**
      * Increments the piece moves counter.
      *
