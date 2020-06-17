@@ -108,7 +108,7 @@ class Game
         ];
         $initBoard = [
             [
-                new Rook(0, 0, 0, 0),
+                null,
                 null,
                 null,
                 null,
@@ -117,12 +117,21 @@ class Game
                 null,
                 new Rook(0, 7, 0, 0)
             ],
+            [
+                new Pawn(1, 0, 1, 0, 0),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ],
+            $emptyCells,
+            $emptyCells,
+            $emptyCells,
             $blackPawns,
             $emptyCells,
-            $emptyCells,
-            $emptyCells,
-            $emptyCells,
-            $whitePawns,
             [
                 new Rook(1, 0, 7, 0),
                 null,
@@ -228,6 +237,7 @@ class Game
      * @throws HttpRequestException
      * @throws GameRulesException
      * @throws HttpNotFoundException
+     * @throws DatabaseInvalidPieceException
      */
     public function move()
     {
@@ -271,6 +281,19 @@ class Game
                 $this->board[$from[1]][$from[0]]->enPassant = $this->getMoveNumber();
                 break;
 
+            case Pawn::TRANSFORM:
+                if (isset($_REQUEST['transformTo'])) {
+                    $transformTo = $_REQUEST['transformTo'];
+                    $transformTo = $this->getTurn() ? strtoupper($transformTo) : strtolower($transformTo);
+                    $factory = new Factory();
+                    $newPiece =
+                        $factory->getPiece($transformTo, $to[0], $to[1], $this->board[$from[1]][$from[0]]->getMovesCounter());
+                    if ($newPiece instanceof King) {
+                        throw new GameRulesException('Invalid piece to transform', 400);
+                    }
+                }
+                break;
+
             case King::CASTLING_LEFT:
                 if (!$this->isReachable($from, [$to[0] - 1, $to[1]])) {
                     throw new GameRulesException('Castling is impossible.', 500);
@@ -309,7 +332,12 @@ class Game
                 $this->board[$from[1]][5]->setCoords(5, $from[1]);
                 break;
         }
-        $this->board[$to[1]][$to[0]] = $this->board[$from[1]][$from[0]];
+
+        if (isset($newPiece)) {
+            $this->board[$to[1]][$to[0]] = $newPiece;
+        } else {
+            $this->board[$to[1]][$to[0]] = $this->board[$from[1]][$from[0]];
+        }
         $this->board[$from[1]][$from[0]] = null;
 
         if ($this->isKingInCheck($this->getTurn())) {
@@ -317,7 +345,7 @@ class Game
         }
 
         $this->incrementMoveNumber();
-        $fromCell->setCoords($to[0], $to[1]);
+        $this->getBoard()[$to[1]][$to[0]]->setCoords($to[0], $to[1]);
 
         if ($this->isKingInCheck($this->getTurn())) {
             $this->status = self::STATUS_CHECK;

@@ -9,6 +9,7 @@ class Pawn extends Piece
 {
     private int $enPassant;
     public const EN_PASSANT = 3;
+    public const TRANSFORM = 6;
 
 
     /**
@@ -28,20 +29,21 @@ class Pawn extends Piece
     public function checkMove(int $x, int $y, array $board, int $moveNumber): int
     {
         $coords = $this->getCoords();
+        $result = 0;
 
         // en passant move
         if (
             $this->getMovesCounter() === 0 &&
             $coords[0] === $x && $coords[1] + $this->forward(2) === $y
         ) {
-            return true;
+            $result = 1;
         }
 
         // basic move
         if (
             $coords[0] === $x && $coords[1] + $this->forward(1) === $y
         ) {
-            return true;
+            $result = 1;
         }
 
         // capturing
@@ -61,10 +63,21 @@ class Pawn extends Piece
             if (
                 !is_null($board[$y][$x]) && $board[$y][$x]->getColor() !== $this->getColor()
             ) {
-                return true;
+                $result = 1;
             }
         }
-        return false;
+
+        if (
+            $result &&
+            (
+                $this->getColor() && $y === 0 ||
+                !$this->getColor() && $y === 7
+            )
+        ) {
+            return self::TRANSFORM;
+        }
+
+        return $result;
     }
 
 
