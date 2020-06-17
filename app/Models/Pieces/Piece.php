@@ -102,6 +102,20 @@ abstract class Piece implements JsonSerializable
         ++$this->movesCounter;
     }
 
+
+    /**
+     * Sets new coords.
+     *
+     * @param int $x
+     * @param int $y
+     */
+    public function setCoords(int $x, int $y): void
+    {
+        $this->x = $x;
+        $this->y = $y;
+        $this->incrementMovesCounter();
+    }
+
     /**
      * Increments the piece moves counter.
      *

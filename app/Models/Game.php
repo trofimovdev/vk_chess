@@ -128,12 +128,6 @@ class Game
      */
     public function status(): array
     {
-        print_r('|');
-        print_r('check: ' . $this->isKingInCheck($this->getTurn()));
-        print_r('|');
-        print_r('mate: ' . $this->isKingInMate($this->getTurn()));
-        print_r('|');
-        print_r($this->getBoard());
         return [
             self::FIELD_MOVE_NUMBER => $this->getMoveNumber(),
             self::FIELD_TURN => $this->getTurn(),
@@ -255,7 +249,7 @@ class Game
         }
 
         $this->incrementMoveNumber();
-        $fromCell->incrementMovesCounter();
+        $fromCell->setCoords($to[0], $to[1]);
 
         if ($this->isKingInCheck($this->getTurn())) {
             $this->status = self::STATUS_CHECK;
@@ -267,7 +261,9 @@ class Game
         $this->db->query('UPDATE games SET board = ?, move_number = ?, status = ? WHERE id = ?;',
             [$this->jsonEncode($this->getBoard()), $this->getMoveNumber(), $this->getStatus(), $this->id]);
 
-        return null;
+        return [
+            self::FIELD_STATUS => $this->getStatus()
+        ];
     }
 
 
@@ -330,7 +326,6 @@ class Game
     private function jsonEncode(array $board): string
     {
         $response = [];
-        $factory = new Factory();
         for ($row = 0; $row < count($board); ++$row) {
             $response[] = [];
             for ($col = 0; $col < count($board[$col]); ++$col) {
@@ -514,7 +509,6 @@ class Game
                 $this->board[$coords[1]][$coords[0]] = null;
                 if (!$this->isKingInCheck($color)) {
                     $this->board = $board;
-//                    print_r('king can move: ' . $x . $y);
                     return false;
                 }
             }
@@ -542,10 +536,6 @@ class Game
                     $this->board[$pieceCoords[1]][$pieceCoords[0]] = null;
                     if (!$this->isKingInCheck($color)) {
                         $this->board = $board;
-//                        print_r('can move: ' . $x . $y);
-//                        print_r($piece);
-//                        print_r('reachable');
-//                        print_r($this->isReachable($pieceCoords, [$x, $y]));
                         return false;
                     }
                 }
