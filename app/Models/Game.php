@@ -106,6 +106,34 @@ class Game
                 new Rook(1, 7, 7, 0)
             ]
         ];
+        $initBoard = [
+            [
+                new Rook(0, 0, 0, 0),
+                null,
+                null,
+                null,
+                new King(0, 4, 0, 0),
+                null,
+                null,
+                new Rook(0, 7, 0, 0)
+            ],
+            $blackPawns,
+            $emptyCells,
+            $emptyCells,
+            $emptyCells,
+            $emptyCells,
+            $whitePawns,
+            [
+                new Rook(1, 0, 7, 0),
+                null,
+                null,
+                null,
+                new King(1, 4, 7, 0),
+                null,
+                null,
+                new Rook(1, 7, 7, 0)
+            ]
+        ];
 
         $game = $this->db->query('INSERT INTO games (board, move_number, status) VALUES (?, ?, ?);',
                                  [$this->jsonEncode($initBoard), 1, self::STATUS_RUNNING]);
@@ -236,11 +264,51 @@ class Game
             throw new GameRulesException('Cell is not reachable.', 500);
         }
 
-        if ($move === Pawn::EN_PASSANT) {
-            $this->board[$to[1] - $fromCell->forward(1)][$to[0]] = null;
-            $this->board[$from[1]][$from[0]]->enPassant = $this->getMoveNumber();
-        }
+        $board = $this->getBoard();
+        switch ($move) {
+            case Pawn::EN_PASSANT:
+                $this->board[$to[1] - $fromCell->forward(1)][$to[0]] = null;
+                $this->board[$from[1]][$from[0]]->enPassant = $this->getMoveNumber();
+                break;
 
+            case King::CASTLING_LEFT:
+                if (!$this->isReachable($from, [$to[0] - 1, $to[1]])) {
+                    throw new GameRulesException('Castling is impossible.', 500);
+                }
+                for ($i = 0; $i <= 1; ++$i) {
+                    $this->board = $board;
+                    if ($i) {
+                        $this->board[$from[1]][$from[0] - $i] = $this->board[$from[1]][$from[0]];
+                        $this->board[$from[1]][$from[0]] = null;
+                    }
+                    if ($this->isKingInCheck($this->getTurn())) {
+                        throw new GameRulesException('Castling is impossible.', 500);
+                    }
+                }
+
+                $this->board = $board;
+                $this->board[$from[1]][3] = $this->board[$from[1]][0];
+                $this->board[$from[1]][0] = null;
+                $this->board[$from[1]][3]->setCoords(3, $from[1]);
+                break;
+
+            case King::CASTLING_RIGHT:
+                for ($i = 0; $i <= 1; ++$i) {
+                    $this->board = $board;
+                    if ($i) {
+                        $this->board[$from[1]][$from[0] + $i] = $this->board[$from[1]][$from[0]];
+                        $this->board[$from[1]][$from[0]] = null;
+                    }
+                    if ($this->isKingInCheck($this->getTurn())) {
+                        throw new GameRulesException('Castling is impossible.', 500);
+                    }
+                }
+                $this->board = $board;
+                $this->board[$from[1]][5] = $this->board[$from[1]][7];
+                $this->board[$from[1]][7] = null;
+                $this->board[$from[1]][5]->setCoords(5, $from[1]);
+                break;
+        }
         $this->board[$to[1]][$to[0]] = $this->board[$from[1]][$from[0]];
         $this->board[$from[1]][$from[0]] = null;
 
