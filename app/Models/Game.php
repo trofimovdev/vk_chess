@@ -106,43 +106,6 @@ class Game
                 new Rook(1, 7, 7, 0)
             ]
         ];
-        $initBoard = [
-            [
-                null,
-                null,
-                null,
-                null,
-                new King(0, 4, 0, 0),
-                null,
-                null,
-                new Rook(0, 7, 0, 0)
-            ],
-            [
-                new Pawn(1, 0, 1, 0, 0),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-            ],
-            $emptyCells,
-            $emptyCells,
-            $emptyCells,
-            $blackPawns,
-            $emptyCells,
-            [
-                new Rook(1, 0, 7, 0),
-                null,
-                null,
-                null,
-                new King(1, 4, 7, 0),
-                null,
-                null,
-                new Rook(1, 7, 7, 0)
-            ]
-        ];
 
         $game = $this->db->query('INSERT INTO games (board, move_number, status) VALUES (?, ?, ?);',
                                  [$this->jsonEncode($initBoard), 1, self::STATUS_RUNNING]);
@@ -587,7 +550,6 @@ class Game
         $flattenBoard = array_merge(...$this->getBoard());
         $coords = $this->getKingCoords($color);
 
-        // король может уйти
         for ($row = 0; $row <= 2; ++$row) {
             for ($col = 0; $col <= 2; ++$col) {
                 $x = $coords[0] + (1 - $row);
@@ -611,7 +573,6 @@ class Game
         }
         $this->board = $board;
 
-        // можно закрыть или съесть, перебираем все ходы
         foreach ($flattenBoard as $piece) {
             if (!($piece instanceof Piece) || $piece instanceof King) {
                 continue;
