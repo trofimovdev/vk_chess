@@ -46,7 +46,7 @@ B-tree.
 Прототип развернут на [chess.trofimov.dev](https://chess.trofimov.dev), сыграть простую партию и поставить
 [«Дурацкий мат»](https://ru.wikipedia.org/wiki/%D0%94%D1%83%D1%80%D0%B0%D1%86%D0%BA%D0%B8%D0%B9_%D0%BC%D0%B0%D1%82)
 можно с помощью готового набора ссылок:
-1. https://chess.trofimov.dev/create — создаем новую игру, далее в качестве {id] подставляем значение из ответа
+1. https://chess.trofimov.dev/create — создаем новую игру, далее в качестве {id} подставляем значение из ответа
 2. https://chess.trofimov.dev/move?id={id}&from=g2&to=g4 — ходим g2-g4 за белых
 3. https://chess.trofimov.dev/move?id={id}&from=e7&to=e5 — ходим e7-e5 за черных
 4. https://chess.trofimov.dev/move?id={id}&from=f2&to=f3 — ходим f2-f3 за белых
