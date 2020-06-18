@@ -2,14 +2,15 @@
 
 namespace App\Models\Pieces;
 
-
 use App\Exceptions\Database\DatabaseInvalidPieceException;
+
 
 class Pawn extends Piece
 {
     private int $enPassant;
     public const EN_PASSANT = 3;
-    public const TRANSFORM = 6;
+    public const TRANSFORM  = 6;
+    public const FIELD_EN_PASSANT = 'enPassant';
 
 
     /**
@@ -95,9 +96,9 @@ class Pawn extends Piece
     public function jsonSerialize() {
         $factory = new Factory();
         return [
-            'type' => $factory->getLetter($this),
-            'movesCounter' => $this->getMovesCounter(),
-            'enPassant' => $this->getEnPassant()
+            Piece::FIELD_TYPE => $factory->getLetter($this),
+            Piece::FIELD_MOVES_COUNTER => $this->getMovesCounter(),
+            self::FIELD_EN_PASSANT => $this->getEnPassant()
         ];
     }
 }

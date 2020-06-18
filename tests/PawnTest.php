@@ -4,6 +4,7 @@ namespace Tests;
 
 use App\Models\Pieces\Factory;
 use App\Models\Pieces\Pawn;
+use App\Models\Pieces\Piece;
 
 
 class PawnTest extends PieceTest
@@ -33,9 +34,9 @@ class PawnTest extends PieceTest
     {
         $factory = new Factory();
         $json = [
-            'type' => $factory->getLetter($this->piece),
-            'enPassant' => 0,
-            'moveCounter' => 0
+            Piece::FIELD_TYPE => $factory->getLetter($this->piece),
+            Piece::FIELD_MOVES_COUNTER => 0,
+            Pawn::FIELD_EN_PASSANT => 0
         ];
         $this->assertSame(
             true,

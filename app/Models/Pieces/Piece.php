@@ -4,7 +4,6 @@ namespace App\Models\Pieces;
 
 
 use App\Exceptions\Database\DatabaseInvalidPieceException;
-use App\Models\Game;
 use JsonSerializable;
 
 abstract class Piece implements JsonSerializable
@@ -13,6 +12,9 @@ abstract class Piece implements JsonSerializable
     private int $x;
     private int $y;
     private int $movesCounter;
+
+    public const FIELD_TYPE = 'type';
+    public const FIELD_MOVES_COUNTER = 'movesCounter';
 
 
     /**
@@ -125,8 +127,8 @@ abstract class Piece implements JsonSerializable
     public function jsonSerialize() {
         $factory = new Factory();
         return [
-            'type' => $factory->getLetter($this),
-            'movesCounter' => $this->getMovesCounter()
+            self::FIELD_TYPE => $factory->getLetter($this),
+            self::FIELD_MOVES_COUNTER => $this->getMovesCounter()
         ];
     }
 }

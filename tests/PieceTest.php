@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Models\Pieces\Factory;
+use App\Models\Pieces\Piece;
 use PHPUnit\Framework\TestCase;
 
 
@@ -76,8 +77,8 @@ abstract class PieceTest extends TestCase
     {
         $factory = new Factory();
         $json = [
-            'type' => $factory->getLetter($this->piece),
-            'moveCounter' => 0
+            Piece::FIELD_TYPE => $factory->getLetter($this->piece),
+            Piece::FIELD_MOVES_COUNTER => 0
         ];
         $this->assertSame(
             true,

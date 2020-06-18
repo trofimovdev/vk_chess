@@ -196,13 +196,14 @@ class Game
     /**
      * Moves piece.
      *
+     * @return array
      * @throws GameInvalidCoords
      * @throws HttpRequestException
      * @throws GameRulesException
      * @throws HttpNotFoundException
      * @throws DatabaseInvalidPieceException
      */
-    public function move()
+    public function move(): array
     {
         if (in_array($this->getStatus(), [self::STATUS_MATE])) {
             throw new HttpNotFoundException('Game over', 404);
@@ -358,7 +359,7 @@ class Game
      *
      * @return Piece|null
      */
-    private function getCell(int $x, int $y)
+    private function getCell(int $x, int $y): ?Piece
     {
         return $this->board[$y][$x];
     }
@@ -369,7 +370,7 @@ class Game
      *
      * @return array
      */
-    private function getBoard()
+    private function getBoard(): array
     {
         return $this->board;
     }
@@ -471,11 +472,14 @@ class Game
         return false;
     }
 
-
+    /**
+     * Increments game move number.
+     */
     private function incrementMoveNumber(): void
     {
         ++$this->moveNumber;
     }
+
 
     /**
      * Returns game status.
@@ -486,6 +490,7 @@ class Game
     {
         return $this->status;
     }
+
 
     /**
      * Returns king coords.
@@ -509,6 +514,7 @@ class Game
         }
         return null;
     }
+
 
     /**
      * Checks if King in check.
@@ -536,6 +542,7 @@ class Game
         }
         return false;
     }
+
 
     /**
      * Checks if King in mate.

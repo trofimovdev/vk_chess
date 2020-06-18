@@ -8,6 +8,7 @@ class King extends Piece
     public const CASTLING_LEFT  = 4;
     public const CASTLING_RIGHT = 5;
 
+
     /**
      * {@inheritDoc}
      */
